@@ -542,7 +542,7 @@ class OSCREC_PG_Mapping(bpy.types.PropertyGroup):
 class OSCREC_OT_mapping_add(bpy.types.Operator):
     bl_idname = "oscrec.mapping_add"
     bl_label = "Add Mapping"
-    bl_options = {'INTERNAL'}
+    bl_options = {'INTERNAL', 'UNDO'}
     bl_description = "Add a new OSC mapping"
 
     def execute(self, context):
@@ -554,7 +554,7 @@ class OSCREC_OT_mapping_add(bpy.types.Operator):
 class OSCREC_OT_mapping_remove(bpy.types.Operator):
     bl_idname = "oscrec.mapping_remove"
     bl_label = "Remove Mapping"
-    bl_options = {'INTERNAL'}
+    bl_options = {'INTERNAL', 'UNDO'}
 
     index: bpy.props.IntProperty(default=-1)
 
