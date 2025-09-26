@@ -22,7 +22,6 @@ except Exception:
 # --- Config ---
 HOLD_LAST = True                  # if no new OSC value this tick, reuse the last one
 DEBUG = False                     # set True for console logs
-APPLY_INTERVAL = 0.016            # seconds; ~60 Hz continuous application
 
 # --- Module state ---
 _rx_thread = None
@@ -35,6 +34,7 @@ _rx_values: Dict[str, float] = {}
 _last_values: Dict[str, float] = {}
 _sock = None
 _last_keyed_frame: Dict[str, int] = {}
+_frame_handler_registered = False
 
 # --- Minimal OSC parsing with bundle support and f/i/d ---
 
@@ -117,28 +117,16 @@ def _listener():
         _sock = None
         if DEBUG: print("[OSC] Socket closed")
 
-# --- Continuous apply timer (always while running) ---
+# --- Frame change handler for applying buffered OSC values ---
 
-def _apply_timer():
-    if _stop_flag:
-        return None
-
+def _apply_buffered_values(scene):
     wm = bpy.context.window_manager if bpy.context is not None else None
-    scn = bpy.context.scene if bpy.context is not None else None
-    if wm is None or scn is None or not getattr(wm, "oscrec_running", False):
-        # When stopped, clear last shown value so it's obvious nothing is being received
-        try:
-            if wm is not None:
-                wm.oscrec_last_value_text = ""
-        except Exception:
-            pass
-        return APPLY_INTERVAL
+    if wm is None or not getattr(wm, "oscrec_running", False):
+        return
 
-    # Apply incoming values to each configured mapping (absolute datapaths)
-    mappings = getattr(scn, "oscrec_mappings", [])
+    mappings = getattr(scene, "oscrec_mappings", [])
     for item in mappings:
         addr = item.address
-        # Normalize mapping address to start with '/'
         if addr and not addr.startswith('/'):
             addr = '/' + addr
         val = None
@@ -147,19 +135,21 @@ def _apply_timer():
                 val = _rx_values.get(addr)
             elif HOLD_LAST and addr in _last_values:
                 val = _last_values.get(addr)
+            if val is not None:
+                _last_values[addr] = val
         if val is None:
             continue
+
         try:
             _apply_mapping_value(item, float(val))
         except Exception as e:
             print(f"[OSC] Failed to set datapath '{item.datapath}': {e}")
             continue
 
-        # Optional keyframe recording on each frame while playing
         if getattr(wm, "oscrec_record_keys", False):
             playing = getattr(bpy.context.screen, "is_animation_playing", False)
             if playing:
-                frame = bpy.context.scene.frame_current
+                frame = scene.frame_current
                 key = f"{item.datapath}"
                 if _last_keyed_frame.get(key) != frame:
                     try:
@@ -168,16 +158,40 @@ def _apply_timer():
                     except Exception as e:
                         print(f"[OSC] Keyframe failed for '{item.datapath}': {e}")
 
-    # Update status text while running
     try:
         with _lock:
             lv = _last_value
         wm.oscrec_last_value_text = (f"{lv:.4f}" if lv is not None else "")
     except Exception:
         pass
-    # Ping UI to redraw so status updates
     _redraw_editors()
-    return APPLY_INTERVAL
+
+
+def _frame_change_handler(scene, depsgraph):
+    if _stop_flag:
+        return
+    if scene is None:
+        scene = bpy.context.scene if bpy.context is not None else None
+    if scene is None:
+        return
+    _apply_buffered_values(scene)
+
+
+def _register_frame_handler():
+    global _frame_handler_registered
+    if not _frame_handler_registered:
+        bpy.app.handlers.frame_change_post.append(_frame_change_handler)
+        _frame_handler_registered = True
+
+
+def _unregister_frame_handler():
+    global _frame_handler_registered
+    if _frame_handler_registered:
+        try:
+            bpy.app.handlers.frame_change_post.remove(_frame_change_handler)
+        except ValueError:
+            pass
+        _frame_handler_registered = False
 
 def _split_expr_index(expr: str):
     """Split a trailing [index] from a full python-style expression.
@@ -390,12 +404,7 @@ def _start_system():
     if _rx_thread is None or not _rx_thread.is_alive():
         _rx_thread = threading.Thread(target=_listener, name="OSC_RX", daemon=True)
         _rx_thread.start()
-    # start/update timer (idempotent; re-registering is fine)
-    try:
-        bpy.app.timers.unregister(_apply_timer)
-    except Exception:
-        pass
-    bpy.app.timers.register(_apply_timer, first_interval=APPLY_INTERVAL, persistent=True)
+    _register_frame_handler()
     print(f"[OSC] Active on {_current_host}:{_current_port}")
 
 
@@ -414,10 +423,7 @@ def _stop_system():
     except Exception:
         pass
     _rx_thread = None
-    try:
-        bpy.app.timers.unregister(_apply_timer)
-    except Exception:
-        pass
+    _unregister_frame_handler()
     try:
         _last_keyed_frame.clear()
     except Exception:
