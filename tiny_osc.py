@@ -509,7 +509,7 @@ class OSCREC_PT_panel(bpy.types.Panel):
                 item,
                 "expanded",
                 text="",
-                icon=('TRIA_DOWN' if getattr(item, 'expanded', True) else 'TRIA_RIGHT'),
+                icon=('DOWNARROW_HLT' if getattr(item, 'expanded', True) else 'RIGHTARROW'),
                 emboss=False,
             )
             header.label(icon='LINKED')
@@ -555,8 +555,8 @@ class OSCREC_PG_Mapping(bpy.types.PropertyGroup):
         default=True,
     )
     enabled: bpy.props.BoolProperty(
-        name="Enabled",
-        description="Apply live OSC and record keyframes for this mapping",
+        name="Mute",
+        description="Mute/unmute this mapping",
         default=True,
     )
     address: bpy.props.StringProperty(
@@ -575,7 +575,7 @@ class OSCREC_OT_mapping_add(bpy.types.Operator):
     bl_idname = "oscrec.mapping_add"
     bl_label = "Add Mapping"
     bl_options = {'INTERNAL', 'UNDO'}
-    bl_description = "Add a new OSC mapping"
+    bl_description = "Add a new OSC mapping."
 
     def execute(self, context):
         scn = context.scene
@@ -591,7 +591,8 @@ class OSCREC_OT_mapping_add(bpy.types.Operator):
 
 class OSCREC_OT_mapping_remove(bpy.types.Operator):
     bl_idname = "oscrec.mapping_remove"
-    bl_label = "Remove Mapping"
+    bl_label = "Remove"
+    bl_description = "Remove this mapping."
     bl_options = {'INTERNAL', 'UNDO'}
 
     index: bpy.props.IntProperty(default=-1)
