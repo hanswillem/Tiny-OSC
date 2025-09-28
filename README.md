@@ -8,8 +8,7 @@ A lightweight Blender add-on for receiving OSC messages and mapping them directl
 
 ## Setup
 - The add-on applies incoming OSC values continuously at ~60 Hz.  
-- Set the **Network Address** (default `localhost`) and **Port** (default `10000`).  
-- Press **Listen** to begin listening.  
+- Set the **Network Address** (default `localhost`) and **Port** (default `10000`), and press **Listen** to begin listening.  
 - Received values are shown at the bottom in real time for quick feedback.
 
 ## Making Mappings
