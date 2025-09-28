@@ -522,7 +522,7 @@ class OSCREC_PT_panel(bpy.types.Panel):
                 group.separator()
                 sub = group.column(align=True)
                 sub.prop(item, "address", text="Address")
-                sub.prop(item, "datapath", text="Datapath")
+                sub.prop(item, "datapath", text="Data Path")
             # Add spacing after each mapping box for visual separation
             col.separator()
         # Add button under last mapping; spacing now consistent
@@ -565,8 +565,8 @@ class OSCREC_PG_Mapping(bpy.types.PropertyGroup):
         default="",
     )
     datapath: bpy.props.StringProperty(
-        name="Datapath",
-        description="The full datapath to map to.",
+        name="Data Path",
+        description="The full data path to map to.",
         default="",
     )
     # Cast mode removed; conversion is auto-inferred from target RNA/property.
