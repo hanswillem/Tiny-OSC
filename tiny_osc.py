@@ -20,9 +20,9 @@ except Exception:
     Dict = dict
 
 # --- Config ---
-HOLD_LAST = True                  # if no new OSC value this tick, reuse the last one
-DEBUG = False                     # set True for console logs
-APPLY_INTERVAL = 0.016            # seconds; ~60 Hz continuous application
+HOLD_LAST = True            # If no new OSC value is received during this update, keep using the previous value
+DEBUG = False               # set True for console logs
+APPLY_INTERVAL = 0.016      # seconds; ~60 Hz continuous application
 
 # --- Module state ---
 _rx_thread = None
@@ -137,6 +137,12 @@ def _apply_timer():
     # Apply incoming values to each configured mapping (absolute datapaths)
     mappings = getattr(scn, "oscrec_mappings", [])
     for item in mappings:
+        # Skip disabled mappings
+        try:
+            if hasattr(item, "enabled") and not item.enabled:
+                continue
+        except Exception:
+            pass
         addr = item.address
         # Normalize mapping address to start with '/'
         if addr and not addr.startswith('/'):
@@ -490,22 +496,33 @@ class OSCREC_PT_panel(bpy.types.Panel):
         # Mapping list
         for i, item in enumerate(scn.oscrec_mappings):
             group = col.column(align=True)
-            # Header row: left title and compact delete button at far right
+            # Header row: fold toggle, link icon, name text field expands to fill, delete button at far right
             header = group.row(align=True)
-            split = header.split(factor=0.9, align=True)
-            left = split.row(align=True)
-            left.label(text=f"Mapping {i+1}", icon = 'LINKED')
-            right = split.row(align=True)
-            right.alignment = 'RIGHT'
-            right.scale_x = 1.0
-            op = right.operator("oscrec.mapping_remove", text="", icon='X')
+            # Backward compatibility: initialize name if empty
+            if not getattr(item, "name", ""):
+                try:
+                    item.name = f"Mapping {i+1}"
+                except Exception:
+                    pass
+            # Foldout toggle
+            header.prop(
+                item,
+                "expanded",
+                text="",
+                icon=('TRIA_DOWN' if getattr(item, 'expanded', True) else 'TRIA_RIGHT'),
+                emboss=False,
+            )
+            header.label(icon='LINKED')
+            header.prop(item, "name", text="")
+            header.prop(item, "enabled", text="", icon=('HIDE_OFF' if item.enabled else 'HIDE_ON'), icon_only=True, emboss=False)
+            op = header.operator("oscrec.mapping_remove", text="", icon='X', emboss=False)
             op.index = i
-            # Fields underneath
-            group.separator()
-            sub = group.column(align=True)
-            sub.prop(item, "address", text="Address")
-            sub.prop(item, "datapath", text="Datapath")
-            # Cast mode removed; always auto-infer target type.
+            # Fields underneath (only visible when expanded)
+            if getattr(item, "expanded", True):
+                group.separator()
+                sub = group.column(align=True)
+                sub.prop(item, "address", text="Address")
+                sub.prop(item, "datapath", text="Datapath")
             # Add spacing after each mapping box for visual separation
             col.separator()
         # Add button under last mapping; spacing now consistent
@@ -527,6 +544,21 @@ class OSCREC_PT_panel(bpy.types.Panel):
 
 # --- Registration ---
 class OSCREC_PG_Mapping(bpy.types.PropertyGroup):
+    name: bpy.props.StringProperty(
+        name="Name",
+        description="Display name for this mapping.",
+        default="",
+    )
+    expanded: bpy.props.BoolProperty(
+        name="Expanded",
+        description="Show mapping details",
+        default=True,
+    )
+    enabled: bpy.props.BoolProperty(
+        name="Enabled",
+        description="Apply live OSC and record keyframes for this mapping",
+        default=True,
+    )
     address: bpy.props.StringProperty(
         name="Address",
         description="The address to listen to.",
@@ -547,7 +579,13 @@ class OSCREC_OT_mapping_add(bpy.types.Operator):
 
     def execute(self, context):
         scn = context.scene
-        scn.oscrec_mappings.add()
+        new_item = scn.oscrec_mappings.add()
+        # Default name: "Mapping N" where N is 1-based index
+        try:
+            new_item.name = f"Mapping {len(scn.oscrec_mappings)}"
+            new_item.expanded = True
+        except Exception:
+            pass
         scn.oscrec_mappings_index = len(scn.oscrec_mappings) - 1
         return {'FINISHED'}
 
