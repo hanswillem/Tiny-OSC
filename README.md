@@ -10,7 +10,7 @@ A lightweight Blender add-on for receiving OSC messages and mapping them directl
 The add-on applies incoming OSC values continuously at ~60 Hz. Received values are shown at the bottom in real time for quick feedback.
 
 ## Making Mappings
-- Click on the + button to add mappings.
+- Click on the + button to add a new mapping.
 - Enter the **Address**. In TouchDesigner this is the channel name being sent over OSC.
 - Enter the **Blender Data Path**. The easiest way is to right-click a property in Blender and choose **Copy Full Data Path**.
 
