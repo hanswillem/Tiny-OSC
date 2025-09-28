@@ -2,13 +2,12 @@
 
 A lightweight Blender add-on for receiving OSC messages and mapping them directly to Blender properties via data paths. Designed with TouchDesigner in mind, but probably, maybe, compatible with Max/MSP and other OSC-capable tools.
 
-## Installation
+## Installation & Setup
 1. Download `tiny_osc.py`, and install through Blender's preferences.
 2. Find the panel under **View3D → Sidebar → TD Osc**.
+3. Set the **Network Address** (default `localhost`) and **Port** (default `10000`), and press **Listen** to begin listening.
 
-## Setup
 - The add-on applies incoming OSC values continuously at ~60 Hz.  
-- Set the **Network Address** (default `localhost`) and **Port** (default `10000`), and press **Listen** to begin listening.  
 - Received values are shown at the bottom in real time for quick feedback.
 
 ## Making Mappings
