@@ -4,7 +4,7 @@ A lightweight Blender add-on for receiving OSC messages and mapping them directl
 
 ## Installation & Setup
 1. Download **tiny_osc.py**, and install through Blender's preferences.
-2. Find the panel in the **N-Panel** of the viewport.
+2. Find it in the **N-Panel** of the viewport.
 3. Set the **Network Address** (default **localhost**) and **Port** (default **10000**), and press **Listen** to begin listening.
 
 The add-on applies incoming OSC values continuously at ~60 Hz. Received values are shown at the bottom in real time for quick feedback.
