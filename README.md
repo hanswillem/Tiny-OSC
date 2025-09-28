@@ -7,8 +7,7 @@ A lightweight Blender add-on for receiving OSC messages and mapping them directl
 2. Find the panel under **View3D → Sidebar → TD Osc**.
 3. Set the **Network Address** (default `localhost`) and **Port** (default `10000`), and press **Listen** to begin listening.
 
-- The add-on applies incoming OSC values continuously at ~60 Hz.  
-- Received values are shown at the bottom in real time for quick feedback.
+The add-on applies incoming OSC values continuously at ~60 Hz. Received values are shown at the bottom in real time for quick feedback.
 
 ## Making Mappings
 - For each mapping:  
