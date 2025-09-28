@@ -17,6 +17,6 @@ The add-on applies incoming OSC values continuously at ~60 Hz. Received values a
 You can target most Blender properties. Just try it.
 
 ## Recording Keyframes
-- Place the playhead anywhere in the timeline and click **Record Keyframes** — Blender will inserting keys.
+- Place the playhead anywhere in the timeline and click **Record Keyframes** — Blender will start inserting keys.
 
 The resulting animation curves can look a bit wonky, but wonky is good.
