@@ -20,7 +20,6 @@ except Exception:
     Dict = dict
 
 # --- Config ---
-HOLD_LAST = True            # If no new OSC value is received during this update, keep using the previous value
 DEBUG = False               # set True for console logs
 APPLY_INTERVAL = 0.016      # seconds; ~60 Hz continuous application
 
@@ -32,7 +31,6 @@ _last_value = None
 _current_host = "localhost"
 _current_port = 10000
 _rx_values: Dict[str, float] = {}
-_last_values: Dict[str, float] = {}
 _sock = None
 _last_keyed_frame: Dict[str, int] = {}
 
@@ -109,7 +107,7 @@ def _listener():
                     with _lock:
                         _last_value = v
                         _rx_values[addr] = v
-                        _last_values[addr] = v
+                        # No hold-last: do not track last values
                     if DEBUG: print(f"[OSC] {addr} {v}")
     finally:
         try: sock.close()
@@ -151,8 +149,7 @@ def _apply_timer():
         with _lock:
             if addr in _rx_values:
                 val = _rx_values.get(addr)
-            elif HOLD_LAST and addr in _last_values:
-                val = _last_values.get(addr)
+            # No hold-last fallback; require fresh value in this frame
         if val is None:
             continue
         try:
@@ -173,6 +170,15 @@ def _apply_timer():
                         _last_keyed_frame[key] = frame
                     except Exception as e:
                         print(f"[OSC] Keyframe failed for '{item.datapath}': {e}")
+
+    # If playback stopped, auto-disable Record Keyframes so UI and mute state stay consistent
+    try:
+        if getattr(wm, "oscrec_record_keys", False):
+            playing = getattr(bpy.context.screen, "is_animation_playing", False)
+            if not playing:
+                wm.oscrec_record_keys = False
+    except Exception:
+        pass
 
     # Update status text while running
     try:
@@ -432,7 +438,6 @@ def _stop_system():
     try:
         with _lock:
             _rx_values.clear()
-            _last_values.clear()
             globals()['_last_value'] = None
     except Exception:
         pass
