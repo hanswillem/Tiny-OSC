@@ -1,6 +1,6 @@
 # Tiny OSC
 
-A lightweight Blender add-on for receiving OSC messages and mapping them directly to Blender properties. Designed with TouchDesigner in mind, but probably, maybe, compatible with Max/MSP and other OSC-capable tools.
+A small Blender add-on for receiving OSC messages and mapping them to Blender properties. Designed with TouchDesigner in mind, but probably, maybe, compatible with Pure Data, Max/MSP and other OSC-capable tools.
 
 ## Installation & Setup
 1. Download **tiny_osc.py**, and install through Blender's preferences.
